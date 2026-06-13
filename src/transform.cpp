@@ -283,4 +283,61 @@ namespace fnb::transform {
 #pragma omp parallel for
     for (size_t i = 1; i < particles.N(); ++i) particles.velocities[i] = v0 + p_h.velocities[i];
   }
+
+  void inertial_to_barycentric_pos(const ParticleStore& restrict particles, ParticleStore& restrict p_b) {
+    Vec3 bary;
+    double total_mu = 0;
+#pragma omp parallel for reduction(+:bary, total_mu) if (particles.N() > 64)
+    for (size_t i = 0; i < particles.test_thres().value_or(particles.N()); ++i) {
+      bary += particles.positions[i] * particles.mus[i];
+      total_mu += particles.mus[i];
+    }
+    bary /= total_mu;
+#pragma omp parallel for if (particles.N() > 64)
+    for (size_t i = 0; i < particles.N(); ++i) p_b.positions[i] = particles.positions[i] - bary;
+  }
+
+  void inertial_to_barycentric_vel(const ParticleStore& restrict particles, ParticleStore& restrict p_b) {
+    Vec3 bary;
+    double total_mu = 0;
+#pragma omp parallel for reduction(+:bary, total_mu) if (particles.N() > 64)
+    for (size_t i = 0; i < particles.test_thres().value_or(particles.N()); ++i) {
+      bary += particles.velocities[i] * particles.mus[i];
+      total_mu += particles.mus[i];
+    }
+    bary /= total_mu;
+#pragma omp parallel for if (particles.N() > 64)
+    for (size_t i = 0; i < particles.N(); ++i) p_b.velocities[i] = particles.velocities[i] - bary;
+  }
+
+  void inertial_to_barycentric_acc(const ParticleStore& restrict particles, ParticleStore& restrict p_b) {
+    Vec3 bary;
+    double total_mu = 0;
+#pragma omp parallel for reduction(+:bary, total_mu) if (particles.N() > 64)
+    for (size_t i = 0; i < particles.test_thres().value_or(particles.N()); ++i) {
+      bary += particles.accelerations[i] * particles.mus[i];
+      total_mu += particles.mus[i];
+    }
+    bary /= total_mu;
+#pragma omp parallel for if (particles.N() > 64)
+    for (size_t i = 0; i < particles.N(); ++i) p_b.accelerations[i] = particles.accelerations[i] - bary;
+  }
+
+  void barycentric_to_inertial_pos(ParticleStore& restrict particles, const ParticleStore& restrict p_b) {
+    Vec3 star = p_b.positions[0];
+#pragma omp parallel for if (particles.N() > 64)
+    for (size_t i = 0; i < particles.N(); ++i) particles.positions[i] = p_b.positions[i] - star;
+  }
+
+  void barycentric_to_inertial_vel(ParticleStore& restrict particles, const ParticleStore& restrict p_b) {
+    Vec3 star = p_b.velocities[0];
+#pragma omp parallel for if (particles.N() > 64)
+    for (size_t i = 0; i < particles.N(); ++i) particles.velocities[i] = p_b.velocities[i] - star;
+  }
+
+  void barycentric_to_inertial_acc(ParticleStore& restrict particles, const ParticleStore& restrict p_b) {
+    Vec3 star = p_b.accelerations[0];
+#pragma omp parallel for if (particles.N() > 64)
+    for (size_t i = 0; i < particles.N(); ++i) particles.accelerations[i] = p_b.accelerations[i] - star;
+  }
 } // namespace fnb::transform
