@@ -13,7 +13,7 @@ namespace fnb {
     std::unordered_map<uint64_t, size_t> id_map;
   };
 
-  Simulation::Simulation(Simulation&&) noexcept = default;
+  Simulation::Simulation(Simulation&& other) noexcept = default;
   Simulation& Simulation::operator=(Simulation&&) noexcept = default;
 
   Simulation::Simulation(const Simulation& other)

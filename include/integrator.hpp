@@ -21,6 +21,11 @@ namespace fnb {
 
   class WHFast {
   public:
+    GravityMethod gravity = GravityMethod::BASIC;
+    double epsilon = 1e-12;
+
+    ParticleStore p_j;
+
     void step(ParticleStore& particles, double dt);
   };
 

@@ -3,7 +3,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "integrator.hpp"
+#include "gravity.hpp"
 #include "particle.hpp"
+#include "transform.hpp"
+#include <unistd.h>
 
 namespace fnb {
   namespace correctors {
@@ -124,10 +127,102 @@ namespace fnb {
       Gs[3] *= X * X2;
       return;
     }
+
+    void update_accel(GravityMethod method, double epsilon2, ParticleStore& particles) {
+      switch (method) {
+      case GravityMethod::BASIC:
+        accel::basic(particles, epsilon2);
+        break;
+      case GravityMethod::COMPENSATED:
+        accel::compensated(particles, epsilon2);
+        break;
+      case GravityMethod::JACOBI:
+        accel::jacobi(particles, epsilon2);
+        break;
+      default:
+        break;
+      }
+    }
+
+    void init_dummy_store(WHFast& obj, ParticleStore& particles) {
+      while (obj.p_j.N() < particles.N()) {
+          obj.p_j.add_particle(IndParticle {});
+      }
+    }
   }
 
   
   void WHFast::step(ParticleStore& particles, double dt) {
-    //
+    init_dummy_store(*this, particles);
+    update_accel(gravity, epsilon * epsilon, particles);
+    double star_mu = particles.mus[0];
+    Vec3 star_pos = particles.positions[0];
+#pragma omp parallel for
+    for (size_t i = 1; i < particles.N(); ++i) {
+      Vec3 dr = star_pos - particles.positions[i];
+      Vec3 correction = dt / 2. * (particles.accelerations[i] - star_mu * dr / dr.mag());
+      particles.velocities[i] += dt / 2. * (particles.accelerations[i] - star_mu * dr / dr.mag());
+    }
+
+    transform::inertial_to_jacobi_pos(particles, p_j);
+    transform::inertial_to_jacobi_vel(particles, p_j);
+
+    double interior_mu = star_mu;
+    for (size_t i = 1; i < particles.N(); ++i) {
+      double r = p_j.positions[i].mag();
+      double vr = p_j.positions[i].dot(p_j.velocities[i]) / r;
+      double alpha = 2 / r - p_j.velocities[i].mag2() / interior_mu;
+
+      double chi = sqrt(interior_mu) * dt * alpha; // Standard initial guess
+      double sqrt_mu = sqrt(interior_mu);
+      
+      for (int j = 0; j < 10; ++j) {
+        double z = alpha * chi * chi;
+        double cs[6];
+        stumpff_cs(cs, z);
+
+        const double C = cs[0];
+        const double S = cs[1];
+
+        double f = (r * vr / sqrt_mu) * chi * chi * C + (1.0 - alpha * r) * chi * chi * chi * S + r * chi - sqrt_mu * dt;
+        double df = (r * vr / sqrt_mu) * chi * (1.0 - alpha * chi * chi * S) + (1.0 - alpha * r) * chi * chi * C + r;
+        
+        double dchi = f / df;
+        chi -= dchi;
+
+        if (fastabs(dchi) < 1e-12) break;
+      }
+
+      double cs[6];
+      stumpff_cs(cs, alpha * chi * chi);
+      const double C = cs[0];
+      const double S = cs[1];
+
+      double f = 1 - chi * chi / r * C;
+      double g = dt - chi * chi * chi / sqrt_mu * S; 
+        
+      Vec3 old_p = p_j.positions[i];
+      Vec3 old_v = p_j.velocities[i];
+      p_j.positions[i] = f * old_p + g * old_v;
+      
+      double r_new = p_j.positions[i].mag();
+      double f_dot = (sqrt_mu / (r * r_new)) * (alpha * chi * chi * chi * S - chi);
+      double g_dot = 1.0 - (chi * chi / r_new) * C;
+
+      p_j.velocities[i] = f_dot * old_p + g_dot * old_v;
+
+      interior_mu += particles.mus[i];
+    }
+
+    transform::jacobi_to_inertial_pos(p_j, particles);
+    transform::jacobi_to_inertial_vel(p_j, particles);
+
+    star_pos = particles.positions[0];
+#pragma omp parallel for
+    for (size_t i = 1; i < particles.N(); ++i) {
+      Vec3 dr = star_pos - particles.positions[i];
+      Vec3 correction = dt / 2. * (particles.accelerations[i] - star_mu * dr / dr.mag());
+      particles.velocities[i] += dt / 2. * (particles.accelerations[i] - star_mu * dr / dr.mag());
+    }
   }
 } // namespace fnb

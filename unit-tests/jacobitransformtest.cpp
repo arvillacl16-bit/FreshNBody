@@ -35,10 +35,10 @@ TEST(JacobiTransform, ReversibilityTest) {
 
   orig = p;
 
-  transform::inertial_to_whds_pos(p, useless);
-  transform::inertial_to_whds_vel(p, useless);
-  transform::whds_to_inertial_pos(p, useless);
-  transform::whds_to_inertial_vel(p, useless);
+  transform::inertial_to_jacobi_pos(p, useless);
+  transform::inertial_to_jacobi_vel(p, useless);
+  transform::jacobi_to_inertial_pos(p, useless);
+  transform::jacobi_to_inertial_vel(p, useless);
 
   Vec3 total_error;
   for (auto i : rv::iota(0, 7)) {

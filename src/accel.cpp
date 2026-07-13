@@ -5,6 +5,7 @@
 #include "gravity.hpp"
 #include "particle.hpp"
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 
 namespace fnb::accel {
@@ -19,16 +20,16 @@ namespace fnb::accel {
     for (size_t i = 0; i < test_thres; ++i) {
       for (size_t j = i + 1; j < test_thres; ++j) {
         Vec3 dp = positions[i] - positions[j];
-        double r = dp.mag();
-        double inv_r3 = 1. / (r * (dp.mag2() + epsilon2));
+        double inv_r3 = 1. / (dp.mag2() + epsilon2);
+        inv_r3 *= std::sqrt(inv_r3);
         accelerations[j] += dp * (mus[i] * inv_r3);
         accelerations[i] -= dp * (mus[j] * inv_r3);
       }
 
       for (size_t j = test_thres; j < N; ++j) {
         Vec3 dp = positions[i] - positions[j];
-        double r = dp.mag();
-        double inv_r3 = 1. / (r * (dp.mag2() + epsilon2));
+        double inv_r3 = 1. / (dp.mag2() + epsilon2);
+        inv_r3 *= std::sqrt(inv_r3);
         accelerations[j] += dp * (mus[i] * inv_r3);
       }
     }
@@ -49,8 +50,8 @@ namespace fnb::accel {
         if (i == j) continue;
 
         Vec3 dp = positions[i] - positions[j];
-        double r = dp.mag();
-        double inv_r3 = 1. / (r * (dp.mag2() + epsilon2));
+        double inv_r3 = 1. / (dp.mag2() + epsilon2);
+        inv_r3 *= std::sqrt(inv_r3);
         Vec3 opp_force = dp * (mus[j] * inv_r3);
 
         Vec3 y = opp_force - c;
