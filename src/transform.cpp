@@ -161,7 +161,7 @@ namespace fnb::transform {
   void inertial_to_demhelio_pos(const ParticleStore& restrict particles, ParticleStore& restrict p_h) {
     double total_mu = 0;
     Vec3 bary;
-#pragma omp parallel for reduction (+:bary, total_mu)
+#pragma omp parallel for reduction(+ : bary, total_mu)
     for (size_t i = 0; i < particles.test_thres().value_or(particles.N()); ++i) {
       bary += particles.mus[i] * particles.positions[i];
       total_mu += particles.mus[i];
@@ -175,7 +175,7 @@ namespace fnb::transform {
   void inertial_to_demhelio_vel(const ParticleStore& restrict particles, ParticleStore& restrict p_h) {
     double total_mu = 0;
     Vec3 bary;
-#pragma omp parallel for reduction (+:bary, total_mu)
+#pragma omp parallel for reduction(+ : bary, total_mu)
     for (size_t i = 0; i < particles.test_thres().value_or(particles.N()); ++i) {
       bary += particles.mus[i] * particles.velocities[i];
       total_mu += particles.mus[i];
@@ -189,7 +189,7 @@ namespace fnb::transform {
   void inertial_to_demhelio_acc(const ParticleStore& restrict particles, ParticleStore& restrict p_h) {
     double total_mu = 0;
     Vec3 bary;
-#pragma omp parallel for reduction (+:bary, total_mu)
+#pragma omp parallel for reduction(+ : bary, total_mu)
     for (size_t i = 0; i < particles.test_thres().value_or(particles.N()); ++i) {
       bary += particles.mus[i] * particles.accelerations[i];
       total_mu += particles.mus[i];
@@ -199,11 +199,11 @@ namespace fnb::transform {
 #pragma omp parallel for default(none) shared(p_h, particles, star_pos)
     for (size_t i = 1; i < particles.N(); ++i) p_h.accelerations[i] = particles.accelerations[i] - star_pos;
   }
-  
+
   void demhelio_to_inertial_pos(ParticleStore& restrict particles, const ParticleStore& restrict p_h) {
     double total_mu = particles.mus[0];
     Vec3 everything_except_star;
-#pragma omp parallel for reduction (+:total_mu, everything_except_star)
+#pragma omp parallel for reduction(+ : total_mu, everything_except_star)
     for (size_t i = 1; i < particles.test_thres().value_or(particles.N()); ++i) {
       everything_except_star += p_h.positions[i] * particles.mus[i];
       total_mu += particles.mus[i];
@@ -217,7 +217,7 @@ namespace fnb::transform {
   void demhelio_to_inertial_vel(ParticleStore& restrict particles, const ParticleStore& restrict p_h) {
     double total_mu = particles.mus[0];
     Vec3 everything_except_star;
-#pragma omp parallel for reduction (+:total_mu, everything_except_star)
+#pragma omp parallel for reduction(+ : total_mu, everything_except_star)
     for (size_t i = 1; i < particles.test_thres().value_or(particles.N()); ++i) {
       everything_except_star += p_h.velocities[i] * particles.mus[i];
       total_mu += particles.mus[i];
@@ -231,7 +231,7 @@ namespace fnb::transform {
   void demhelio_to_inertial_acc(ParticleStore& restrict particles, const ParticleStore& restrict p_h) {
     double total_mu = particles.mus[0];
     Vec3 everything_except_star;
-#pragma omp parallel for reduction (+:total_mu, everything_except_star)
+#pragma omp parallel for reduction(+ : total_mu, everything_except_star)
     for (size_t i = 1; i < particles.test_thres().value_or(particles.N()); ++i) {
       everything_except_star += p_h.accelerations[i] * particles.mus[i];
       total_mu += particles.mus[i];
@@ -251,7 +251,7 @@ namespace fnb::transform {
   void inertial_to_whds_vel(const ParticleStore& restrict particles, ParticleStore& restrict p_h) {
     Vec3 total_momentum;
     double total_mu = 0;
-#pragma omp parallel for reduction(+:total_momentum, total_mu)
+#pragma omp parallel for reduction(+ : total_momentum, total_mu)
     for (size_t i = 0; i < particles.test_thres().value_or(particles.N()); ++i) {
       total_momentum += particles.mus[i] * particles.velocities[i];
       total_mu += particles.mus[i];
@@ -272,7 +272,7 @@ namespace fnb::transform {
   void whds_to_inertial_vel(ParticleStore& restrict particles, const ParticleStore& restrict p_h) {
     Vec3 star_vel_correction;
     double total_mu = 0;
-#pragma omp parallel for reduction(+:star_vel_correction, total_mu)
+#pragma omp parallel for reduction(+ : star_vel_correction, total_mu)
     for (size_t i = 1; i < particles.N(); ++i) {
       star_vel_correction += p_h.mus[i] * p_h.velocities[i];
       total_mu += p_h.mus[i];
@@ -287,7 +287,7 @@ namespace fnb::transform {
   void inertial_to_barycentric_pos(const ParticleStore& restrict particles, ParticleStore& restrict p_b) {
     Vec3 bary;
     double total_mu = 0;
-#pragma omp parallel for reduction(+:bary, total_mu) if (particles.N() > 64)
+#pragma omp parallel for reduction(+ : bary, total_mu) if (particles.N() > 64)
     for (size_t i = 0; i < particles.test_thres().value_or(particles.N()); ++i) {
       bary += particles.positions[i] * particles.mus[i];
       total_mu += particles.mus[i];
@@ -300,7 +300,7 @@ namespace fnb::transform {
   void inertial_to_barycentric_vel(const ParticleStore& restrict particles, ParticleStore& restrict p_b) {
     Vec3 bary;
     double total_mu = 0;
-#pragma omp parallel for reduction(+:bary, total_mu) if (particles.N() > 64)
+#pragma omp parallel for reduction(+ : bary, total_mu) if (particles.N() > 64)
     for (size_t i = 0; i < particles.test_thres().value_or(particles.N()); ++i) {
       bary += particles.velocities[i] * particles.mus[i];
       total_mu += particles.mus[i];
@@ -313,7 +313,7 @@ namespace fnb::transform {
   void inertial_to_barycentric_acc(const ParticleStore& restrict particles, ParticleStore& restrict p_b) {
     Vec3 bary;
     double total_mu = 0;
-#pragma omp parallel for reduction(+:bary, total_mu) if (particles.N() > 64)
+#pragma omp parallel for reduction(+ : bary, total_mu) if (particles.N() > 64)
     for (size_t i = 0; i < particles.test_thres().value_or(particles.N()); ++i) {
       bary += particles.accelerations[i] * particles.mus[i];
       total_mu += particles.mus[i];

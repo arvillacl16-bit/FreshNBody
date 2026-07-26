@@ -82,6 +82,6 @@ namespace fnb {
   [[nodiscard]] inline constexpr Vec3 operator+(Vec3 a) { return a; }
   [[nodiscard]] inline constexpr Vec3 operator-(Vec3 a) { return {-a.x, -a.y, -a.z}; }
 } // namespace fnb
-#pragma omp declare reduction(+: fnb::Vec3: omp_out += omp_in) initializer(omp_priv = fnb::Vec3{0,0,0})
+#pragma omp declare reduction(+ : fnb::Vec3 : omp_out += omp_in) initializer(omp_priv = fnb::Vec3{0, 0, 0})
 
 #endif

@@ -53,21 +53,11 @@ namespace fnb {
 
       IntegratorConfig(IntegratorConfig&& other) noexcept {
         switch (other.type_) {
-        case IntegratorType::NONE:
-          nointeg_ = other.nointeg_;
-          break;
-        case IntegratorType::LEAPFROG:
-          leapfrog_ = other.leapfrog_;
-          break;
-        case IntegratorType::WHFAST:
-          whfast_ = other.whfast_;
-          break;
-        case IntegratorType::IAS15:
-          ias15_ = other.ias15_;
-          break;
-        case IntegratorType::MERCURIUS:
-          mercurius_ = other.mercurius_;
-          break;
+        case IntegratorType::NONE: nointeg_ = other.nointeg_; break;
+        case IntegratorType::LEAPFROG: leapfrog_ = other.leapfrog_; break;
+        case IntegratorType::WHFAST: whfast_ = other.whfast_; break;
+        case IntegratorType::IAS15: ias15_ = other.ias15_; break;
+        case IntegratorType::MERCURIUS: mercurius_ = other.mercurius_; break;
         }
         type_ = other.type_;
         other.reset();
@@ -76,21 +66,11 @@ namespace fnb {
       IntegratorConfig& operator=(IntegratorConfig&& other) noexcept {
         if (this == &other) return *this;
         switch (other.type_) {
-        case IntegratorType::NONE:
-          nointeg_ = other.nointeg_;
-          break;
-        case IntegratorType::LEAPFROG:
-          leapfrog_ = other.leapfrog_;
-          break;
-        case IntegratorType::WHFAST:
-          whfast_ = other.whfast_;
-          break;
-        case IntegratorType::IAS15:
-          ias15_ = other.ias15_;
-          break;
-        case IntegratorType::MERCURIUS:
-          mercurius_ = other.mercurius_;
-          break;
+        case IntegratorType::NONE: nointeg_ = other.nointeg_; break;
+        case IntegratorType::LEAPFROG: leapfrog_ = other.leapfrog_; break;
+        case IntegratorType::WHFAST: whfast_ = other.whfast_; break;
+        case IntegratorType::IAS15: ias15_ = other.ias15_; break;
+        case IntegratorType::MERCURIUS: mercurius_ = other.mercurius_; break;
         }
         type_ = other.type_;
         other.reset();
@@ -99,21 +79,11 @@ namespace fnb {
 
       IntegratorConfig(const IntegratorConfig& other) {
         switch (other.type_) {
-        case IntegratorType::NONE:
-          nointeg_ = other.nointeg_;
-          break;
-        case IntegratorType::LEAPFROG:
-          leapfrog_ = other.leapfrog_;
-          break;
-        case IntegratorType::WHFAST:
-          whfast_ = other.whfast_;
-          break;
-        case IntegratorType::IAS15:
-          ias15_ = other.ias15_;
-          break;
-        case IntegratorType::MERCURIUS:
-          mercurius_ = other.mercurius_;
-          break;
+        case IntegratorType::NONE: nointeg_ = other.nointeg_; break;
+        case IntegratorType::LEAPFROG: leapfrog_ = other.leapfrog_; break;
+        case IntegratorType::WHFAST: whfast_ = other.whfast_; break;
+        case IntegratorType::IAS15: ias15_ = other.ias15_; break;
+        case IntegratorType::MERCURIUS: mercurius_ = other.mercurius_; break;
         }
         type_ = other.type_;
       }
@@ -121,21 +91,11 @@ namespace fnb {
       IntegratorConfig& operator=(const IntegratorConfig& other) noexcept {
         if (this == &other) return *this;
         switch (other.type_) {
-        case IntegratorType::NONE:
-          nointeg_ = other.nointeg_;
-          break;
-        case IntegratorType::LEAPFROG:
-          leapfrog_ = other.leapfrog_;
-          break;
-        case IntegratorType::WHFAST:
-          whfast_ = other.whfast_;
-          break;
-        case IntegratorType::IAS15:
-          ias15_ = other.ias15_;
-          break;
-        case IntegratorType::MERCURIUS:
-          mercurius_ = other.mercurius_;
-          break;
+        case IntegratorType::NONE: nointeg_ = other.nointeg_; break;
+        case IntegratorType::LEAPFROG: leapfrog_ = other.leapfrog_; break;
+        case IntegratorType::WHFAST: whfast_ = other.whfast_; break;
+        case IntegratorType::IAS15: ias15_ = other.ias15_; break;
+        case IntegratorType::MERCURIUS: mercurius_ = other.mercurius_; break;
         }
         type_ = other.type_;
         return *this;
@@ -143,10 +103,8 @@ namespace fnb {
 
       ~IntegratorConfig() {
         switch (type_) {
-        case IntegratorType::WHFAST:
-          whfast_.~WHFast();
-        default:
-          break;
+        case IntegratorType::WHFAST: whfast_.~WHFast();
+        default: break;
         }
       }
 
