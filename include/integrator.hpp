@@ -20,18 +20,24 @@ namespace fnb {
   };
 
   class WHFast {
+  private:
+    ParticleStore p_j;
   public:
     GravityMethod gravity = GravityMethod::BASIC;
     double epsilon = 1e-12;
 
-    ParticleStore p_j;
 
     void step(ParticleStore& particles, double dt);
   };
 
   class IAS15 {
+  private:
+    double dt_ = 10000;
   public:
-    void step(ParticleStore& particles, double dt);
+    unsigned int max_iterations = 12;
+    double epsilon = 1e-12;
+    double epsilon_dtadjust = 1e-9;
+    void step(ParticleStore& particles);
   };
 
   class Mercurius {

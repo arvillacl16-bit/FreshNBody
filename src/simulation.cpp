@@ -46,7 +46,7 @@ namespace fnb {
     switch (config.type()) {
     case IntegratorType::LEAPFROG: config.get<Leapfrog>().step(particles_, dt); break;
     case IntegratorType::WHFAST: config.get<WHFast>().step(particles_, dt); break;
-    case IntegratorType::IAS15: config.get<IAS15>().step(particles_, dt); break;
+    case IntegratorType::IAS15: config.get<IAS15>().step(particles_); break;
     case IntegratorType::MERCURIUS: config.get<Mercurius>().step(particles_, dt); break;
     default: int _;
     }

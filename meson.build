@@ -33,7 +33,8 @@ if do_unit_tests
     'leapfrog-basic': 'leapfrog-basic.cpp',
     'leapfrog-compensated': 'leapfrog-compensated.cpp',
     'jacobitransformtest': 'jacobitransformtest.cpp',
-    'whfast': 'whfast.cpp'
+    'whfast': 'whfast.cpp',
+    'ias15': 'ias15.cpp',
   }
 
   foreach test_name, test_file : test_files

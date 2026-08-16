@@ -172,15 +172,15 @@ namespace fnb {
       }
     }
 
-    void init_dummy_store(WHFast& obj, ParticleStore& particles) {
-      while (obj.p_j.N() < particles.N()) {
-        obj.p_j.add_particle(IndParticle{});
+    void init_dummy_store(ParticleStore& obj, ParticleStore& particles) {
+      while (obj.N() < particles.N()) {
+        obj.add_particle(IndParticle{});
       }
     }
   } // namespace
 
   void WHFast::step(ParticleStore& particles, double dt) {
-    init_dummy_store(*this, particles);
+    init_dummy_store(this->p_j, particles);
 
     // Helper lambda performing a single WH substep with a scaled time interval
     auto wh_substep = [&](double sub_dt) {
