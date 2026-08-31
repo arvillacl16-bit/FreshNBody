@@ -33,6 +33,9 @@ namespace fnb {
   class IAS15 {
   private:
     double dt_ = 10000;
+    std::vector<Vec3> y0_, v0_, a0_;
+    std::vector<Vec3> a_sub_, g_;
+    std::vector<Vec3> current_accs_;
   public:
     unsigned int max_iterations = 12;
     double epsilon = 1e-12;

@@ -22,7 +22,7 @@ namespace fnb {
           Vec3 rij = pj - pi;
           double dist2 = rij.x * rij.x + rij.y * rij.y + rij.z * rij.z;
           double dist = std::sqrt(dist2);
-          if (dist == 0.0) continue;
+          if (dist < 1e-9) continue;
           double inv_dist3 = 1.0 / (dist2 * dist);
           accs[i] += rij * (particles.mus[j] * inv_dist3);
           accs[j] += rij * (-particles.mus[i] * inv_dist3);
@@ -35,35 +35,43 @@ namespace fnb {
     size_t N = particles.N();
     if (N == 0) return;
 
-    std::vector<Vec3> y0(N), v0(N), a0(N);
+    y0_.resize(N);
+    v0_.resize(N);
+    a0_.resize(N);
     for (size_t p = 0; p < N; ++p) {
-      y0[p] = particles.positions[p];
-      v0[p] = particles.velocities[p];
-      a0[p] = particles.accelerations[p];
+      y0_[p] = particles.positions[p];
+      v0_[p] = particles.velocities[p];
+      a0_[p] = particles.accelerations[p];
     }
 
-    std::vector<std::vector<Vec3>> a_sub(N, std::vector<Vec3>(8));
+    a_sub_.resize(N * 8);
     for (size_t p = 0; p < N; ++p) {
-      a_sub[p][0] = a0[p];
+      a_sub_[p * 8] = a0_[p];
     }
 
-    std::vector<std::vector<Vec3>> g(N, std::vector<Vec3>(8));
+    g_.resize(N * 8);
+    for (size_t p = 0; p < N; ++p) {
+      g_[p * 8] = a0_[p];
+    }
 
     for (size_t iter = 0; iter < max_iterations; ++iter) {
       int rr_idx = 0;
       for (size_t i = 1; i < 8; ++i) {
         for (size_t p = 0; p < N; ++p) {
           Vec3 sum_g{0, 0, 0};
-          int idx_check = 0;
+          int rridx_local = rr_idx;
           for (size_t j = 1; j < i; ++j) {
-            idx_check++;
+            sum_g += g_[8 * p + j] * rr[rridx_local++];
           }
-          g[p][i] = (a_sub[p][i] - a0[p]) * (1.0 / h[i]);
+          g_[8 * p + i] = (a_sub_[p * 8 + i] - a0_[p] - sum_g) * (1.0 / h[i]);
         }
+        rr_idx += i;      
       }
 
       for (size_t i = 1; i < 8; ++i) {
         double hn = h[i];
+        double hdt = hn * dt_;
+        double hdt2 = hdt * hdt;
         int c_idx = (i - 1) * i / 2;
 
         for (size_t p = 0; p < N; ++p) {
@@ -72,33 +80,41 @@ namespace fnb {
 
           int cid = c_idx;
           for (size_t j = 0; j < i; ++j) {
+            double c_val = c[cid];
+            double d_val = d[cid];
+            y_corr += g_[p * 8 + j + 1] * c_val;
+            v_corr += g_[p * 8 + j + 1] * d_val;
             cid++;
           }
 
-          Vec3 y_est = y0[p] + v0[p] * (hn * dt_) + a0[p] * (0.5 * hn * hn * dt_ * dt_);
-          Vec3 v_est = v0[p] + a0[p] * (hn * dt_);
-
-          particles.positions[p] = y_est;
-          particles.velocities[p] = v_est;
+          particles.positions[p] = y0_[p] + v0_[p] * hdt + a0_[p] * (0.5 * hdt2) + y_corr * (hdt2 * hdt);
+          particles.velocities[p] = v0_[p] + a0_[p] * hdt + v_corr * hdt2;
         }
 
         std::vector<Vec3> current_accs(N);
         compute_accelerations(particles, current_accs);
         for (size_t p = 0; p < N; ++p) {
-          a_sub[p][i] = current_accs[p];
+          a_sub_[p * 8 + i] = current_accs[p];
         }
       }
     }
 
+    double max_delta = 0.0;
     for (size_t p = 0; p < N; ++p) {
       Vec3 sum_v{0, 0, 0};
-      Vec3 sum_y{0, 0, 0};
       for (size_t i = 0; i < 8; ++i) {
-        sum_v += a_sub[p][i] * w[i];
+        sum_v += a_sub_[p * 8 + i] * w[i];
       }
-      particles.positions[p] = y0[p] + v0[p] * dt_ + a0[p] * (0.5 * dt_ * dt_) + sum_v * (dt_ * dt_);
-      particles.velocities[p] = v0[p] + a0[p] * dt_ + sum_v * dt_;
-      particles.accelerations[p] = a_sub[p][7];
+      particles.positions[p] = y0_[p] + v0_[p] * dt_ + a0_[p] * (0.5 * dt_ * dt_) + sum_v * (dt_ * dt_);
+      particles.velocities[p] = v0_[p] + a0_[p] * dt_ + sum_v * dt_;
+      particles.accelerations[p] = a_sub_[p * 8 + 7];
+
+      double d_mag = g_[p * 8 + 7].mag();
+      if (d_mag > max_delta) max_delta = d_mag;
+    }
+
+    if (max_delta > 0.0) {
+      dt_ = dt_ * std::pow(epsilon_dtadjust / max_delta, 1.0 / 15.0) * 0.9;
     }
   }
 } // namespace fnb
